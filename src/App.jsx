@@ -33,63 +33,21 @@ const OpenSoundDashboard = () => {
   ];
 
   // Fonction ETL - Extract, Transform, Load
-  const performETL = async (genreQuery) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // EXTRACTION - Récupération des données depuis l'API Deezer
-      const response = await fetch(
-        `https://cors-anywhere.herokuapp.com/https://api.deezer.com/search?q=${genreQuery}&limit=50`,
-        { headers: { Origin: "localhost" } }
-      );
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la récupération des données");
-      }
-
-      const result = await response.json();
-
-      // TRANSFORMATION - Nettoyage et enrichissement des données
-      const transformedData = result.data.map((track) => {
-        const durationMinutes = Math.floor(track.duration / 60);
-        const durationSeconds = track.duration % 60;
-        const releaseYear = track.album?.release_date
-          ? new Date(track.album.release_date).getFullYear()
-          : null;
-
-        return {
-          id: track.id,
-          title: track.title,
-          artist: track.artist.name,
-          artistId: track.artist.id,
-          album: track.album.title,
-          duration: track.duration,
-          durationFormatted: `${durationMinutes}:${durationSeconds
-            .toString()
-            .padStart(2, "0")}`,
-          popularity: track.rank || 0,
-          explicit: track.explicit_lyrics,
-          preview: track.preview,
-          cover: track.album.cover_medium,
-          releaseDate: track.album.release_date,
-          releaseYear: releaseYear,
-          decade: releaseYear ? Math.floor(releaseYear / 10) * 10 : null,
-        };
-      });
-
-      // LOAD - Chargement dans notre "Data Warehouse" (state)
-      setData(transformedData);
-
-      // Calcul des statistiques (couche analytique)
-      calculateStats(transformedData);
-    } catch (err) {
-      setError(err.message);
-      console.error("Erreur ETL:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const performETL = async (genreQuery) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`http://localhost:8000/api/etl/${genreQuery}`);
+            if (!response.ok) throw new Error("Erreur lors de l'ETL");
+            const result = await response.json();
+            setData(result.data);
+            calculateStats(result.data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
   // Analyse des données - Couche de restitution
   const calculateStats = (tracks) => {
