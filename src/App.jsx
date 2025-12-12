@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Music,
   TrendingUp,
   Clock,
   Users,
-  Globe,
-  Calendar,
-  Play,
   BarChart3,
   Loader2,
   AlertCircle,
 } from "lucide-react";
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 const OpenSoundDashboard = () => {
   const [data, setData] = useState([]);
@@ -33,21 +41,23 @@ const OpenSoundDashboard = () => {
   ];
 
   // Fonction ETL - Extract, Transform, Load
-    const performETL = async (genreQuery) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(`http://localhost:8000/api/etl/${genreQuery}`);
-            if (!response.ok) throw new Error("Erreur lors de l'ETL");
-            const result = await response.json();
-            setData(result.data);
-            calculateStats(result.data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const performETL = async (genreQuery) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/etl/${genreQuery}`
+      );
+      if (!response.ok) throw new Error("Erreur lors de l'ETL");
+      const result = await response.json();
+      setData(result.data);
+      calculateStats(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Analyse des données - Couche de restitution
   const calculateStats = (tracks) => {
@@ -102,6 +112,18 @@ const OpenSoundDashboard = () => {
       explicitCount,
     });
   };
+
+  const barData = stats?.topArtists || [];
+
+  const pieData = stats
+    ? [
+        { name: "Explicite", value: stats.explicitCount },
+        {
+          name: "Non explicite",
+          value: stats.totalTracks - stats.explicitCount,
+        },
+      ]
+    : [];
 
   useEffect(() => {
     performETL("top");
@@ -271,40 +293,55 @@ const OpenSoundDashboard = () => {
             </div>
           )}
 
-          {/* Décennies */}
+          {/* ANALYSE VISUELLE – GRAPHIQUES */}
           {stats && (
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <Calendar className="w-6 h-6 text-blue-300" />
-                <h2 className="text-xl font-bold text-white">
-                  Distribution par Décennie
-                </h2>
+            <div className="mt-6 bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-green-300" />
+                Analyse visuelle du catalogue
+              </h2>
+
+              {/* BAR CHART – Top artistes */}
+              <div className="mb-10">
+                <h3 className="text-white font-semibold mb-3">
+                  Top artistes par popularité moyenne
+                </h3>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={barData}>
+                    <XAxis
+                      dataKey="name"
+                      interval={0}
+                      angle={-30}
+                      textAnchor="end"
+                      height={70}
+                    />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="avgPopularity" fill="#a855f7" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="space-y-3">
-                {Object.entries(stats.decadeStats)
-                  .sort(([a], [b]) => b - a)
-                  .map(([decade, count]) => {
-                    const maxCount = Math.max(
-                      ...Object.values(stats.decadeStats)
-                    );
-                    const percentage = (count / maxCount) * 100;
-                    return (
-                      <div key={decade}>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-white font-medium">
-                            {decade}s
-                          </span>
-                          <span className="text-blue-300">{count} tracks</span>
-                        </div>
-                        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+
+              {/* PIE CHART – Contenu explicite */}
+              <div className="mb-10">
+                <h3 className="text-white font-semibold mb-3">
+                  Répartition du contenu explicite
+                </h3>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={90}
+                      label
+                    >
+                      <Cell fill="#FFFF00" />
+                      <Cell fill="#7f00ff" />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
@@ -403,7 +440,7 @@ const OpenSoundDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
             <div className="bg-white/10 rounded-lg p-4">
               <h4 className="font-bold mb-2 text-purple-300">
-                📊 Tendances Genres
+                Tendances Genres
               </h4>
               <p className="text-sm">
                 Les genres{" "}
@@ -415,7 +452,7 @@ const OpenSoundDashboard = () => {
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <h4 className="font-bold mb-2 text-blue-300">
-                ⏱️ Durée Optimale
+                Durée Optimale
               </h4>
               <p className="text-sm">
                 La durée moyenne des hits est de{" "}
@@ -425,7 +462,7 @@ const OpenSoundDashboard = () => {
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <h4 className="font-bold mb-2 text-yellow-300">
-                🔞 Contenu Explicite
+                Contenu Explicite
               </h4>
               <p className="text-sm">
                 {stats?.explicitPercent}% du catalogue contient du contenu
@@ -434,7 +471,7 @@ const OpenSoundDashboard = () => {
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <h4 className="font-bold mb-2 text-green-300">
-                🎯 Recommandation
+                Recommandation
               </h4>
               <p className="text-sm">
                 Focus sur les artistes {stats?.topArtists[0]?.name} qui dominent
