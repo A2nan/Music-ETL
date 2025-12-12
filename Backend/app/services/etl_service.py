@@ -42,7 +42,7 @@ def load_to_database(tracks: list[TrackCreate]):
     try:
         for track_data in tracks:
             # Vérifie si la piste existe déjà
-            existing_track = db.query(Track).filter(Track.id == track_data.artist_id + track_data.title).first()
+            existing_track = db.query(Track).filter(Track.deezer_id == track_data.artist_id + track_data.title).first()
             if not existing_track:
                 track = Track(**track_data.dict())
                 db.add(track)

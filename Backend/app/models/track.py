@@ -4,7 +4,8 @@ from app.database import Base
 class Track(Base):
     __tablename__ = "tracks"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)  # ✅ clé technique
+    deezer_id = Column(String, unique=True, index=True) # ✅ id source
     title = Column(String)
     artist = Column(String)
     artist_id = Column(String)

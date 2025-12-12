@@ -14,10 +14,11 @@ class TrackBase(BaseModel):
     genre: str
 
 class TrackCreate(TrackBase):
-    pass
+    deezer_id: Optional[str] = None
 
 class Track(TrackBase):
-    id: str
+    id: int          # 👈 clé technique SID
+    deezer_id: Optional[str] = None
 
     class Config:
         orm_mode = True
