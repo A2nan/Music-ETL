@@ -3,7 +3,7 @@ from app.models.track import Track
 from app.schemas.track import TrackCreate
 from app.database import SessionLocal
 
-def extract_from_deezer(genre: str, limit: int = 50):
+def extract_from_deezer(genre: str, limit: int = 100):
     """Extraction des données depuis l'API Deezer."""
     url = f"https://api.deezer.com/search?q={genre}&limit={limit}"
     response = requests.get(url)
@@ -17,6 +17,11 @@ def transform_data(raw_tracks: list) -> list[TrackCreate]:
     for track in raw_tracks:
         release_year = None
         decade = None
+
+        cover_url = None
+        if track.get("album"):
+            cover_url = track["album"].get("cover_medium")
+
         if track.get("album") and track["album"].get("release_date"):
             release_year = int(track["album"]["release_date"][:4])
             decade = (release_year // 10) * 10
@@ -32,7 +37,9 @@ def transform_data(raw_tracks: list) -> list[TrackCreate]:
             release_year=release_year,
             decade=decade,
             genre="pop",  # À adapter selon la requête
+            cover_url=cover_url  # 👈
         )
+        
         transformed_tracks.append(transformed_track)
     return transformed_tracks
 

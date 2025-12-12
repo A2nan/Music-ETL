@@ -354,7 +354,7 @@ const OpenSoundDashboard = () => {
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-3">
                         <img
-                          src={track.cover}
+                          src={track.cover_url}
                           alt={track.title}
                           className="w-12 h-12 rounded"
                         />

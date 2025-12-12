@@ -12,12 +12,13 @@ class TrackBase(BaseModel):
     release_year: Optional[int] = None
     decade: Optional[int] = None
     genre: str
+    cover_url: Optional[str] = None 
 
 class TrackCreate(TrackBase):
     deezer_id: Optional[str] = None
 
 class Track(TrackBase):
-    id: int          # 👈 clé technique SID
+    id: int
     deezer_id: Optional[str] = None
 
     class Config:

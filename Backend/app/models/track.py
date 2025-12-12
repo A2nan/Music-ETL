@@ -18,3 +18,4 @@ class Track(Base):
     genre = Column(String)
     created_at = Column(DateTime, server_default="now()")
     updated_at = Column(DateTime, onupdate="now()")
+    cover_url = Column(String)
