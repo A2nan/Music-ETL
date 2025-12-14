@@ -3,9 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 import sys
 
-
 sys.path.append("/opt/airflow/Backend")
-
 
 from app.services.etl_service import run_etl  
 
